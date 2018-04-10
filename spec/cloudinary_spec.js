@@ -171,6 +171,38 @@ describe("cloudinary", function () {
       })
     })
   });
+  describe('child transformation with ng-if', function () {
+    it('should include transformation with ng-if="true"', function () {
+      var template = '<div><cl-image public_id="foobar">' +
+          '<cl-transformation ng-if="true" gravity="north" effect="sepia" radius="20" />' +
+          '</cl-image></div>';
+      var element = $compile(template)($rootScope);
+      $rootScope.$digest();
+      expect(element.html()).toMatch("src=\"https?://res\.cloudinary\.com/" + CLOUD_NAME + "/image/upload/e_sepia,g_north,r_20/foobar\"");
+    });
+    it('should exclude transformation with ng-if="false"', function () {
+      var template = '<div><cl-image public_id="foobar">' +
+          '<cl-transformation ng-if="false" gravity="north" effect="sepia" radius="20" />' +
+          '</cl-image></div>';
+      var element = $compile(template)($rootScope);
+      $rootScope.$digest();
+      expect(element.html()).toMatch("src=\"https?://res\.cloudinary\.com/" + CLOUD_NAME + "/image/upload/foobar\"");
+    });
+    it('should update transformation on ng-if condition changed', function () {
+      var template = '<div><cl-image public_id="foobar">' +
+          '<cl-transformation ng-if="ngIfVisible" gravity="north" effect="sepia" radius="20" />' +
+          '</cl-image></div>';
+      var element = $compile(template)($rootScope);
+
+      $rootScope.ngIfVisible = true;
+      $rootScope.$digest();
+      expect(element.html()).toMatch("src=\"https?://res\.cloudinary\.com/" + CLOUD_NAME + "/image/upload/e_sepia,g_north,r_20/foobar\"");
+
+      $rootScope.ngIfVisible = false;
+      $rootScope.$digest();
+      expect(element.html()).toMatch("src=\"https?://res\.cloudinary\.com/" + CLOUD_NAME + "/image/upload/foobar\"");
+    });
+  });
   describe("clSrc", function () {
     it('populates the src attribute with the cloudinary URL for the public ID', function () {
       var element = $compile("<div><img cl-src='foobar'/></div>")($rootScope);

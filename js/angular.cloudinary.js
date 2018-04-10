@@ -90,7 +90,11 @@
       transclude : false,
       require: '^clImage',
       link : function (scope, element, attrs, clImageCtrl) {
-        clImageCtrl.addTransformation(toCloudinaryAttributes(attrs, /^[^$]/));
+        var transformation = toCloudinaryAttributes(attrs, /^[^$]/);
+        clImageCtrl.addTransformation(transformation);
+        scope.$on('$destroy', function (event) {
+          clImageCtrl.removeTransformation(transformation);
+        })
       }
     }
   }]);
@@ -100,6 +104,15 @@
       this.addTransformation = function(ts) {
         $scope.transformations = $scope.transformations || [];
         $scope.transformations.push(ts);
+        $scope.transformations = $scope.transformations.slice()
+      };
+      this.removeTransformation = function (ts) {
+        $scope.transformations = $scope.transformations || [];
+        var index = $scope.transformations.indexOf(ts);
+        if (index >= 0) {
+          $scope.transformations.splice(index, 1);
+          $scope.transformations = $scope.transformations.slice()
+        }
       }
     };
     Controller.$inject = ['$scope'];
@@ -119,6 +132,12 @@
         if (scope.transformations) {
           options.transformation = scope.transformations;
         }
+
+        scope.$watch('transformations', function(value){
+          if (!value) return;
+          options.transformation = value;
+          loadImage();
+        });
 
         // store public id and load image
         attrs.$observe('publicId', function(value){
